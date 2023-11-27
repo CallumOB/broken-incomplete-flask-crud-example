@@ -14,6 +14,7 @@ app.config['MYSQL_DB'] = 'student'
 app.config['MYSQL_HOST'] = '127.0.0.1'
 mysql.init_app(app)
 
+# CREATE 
 @app.route("/add") #Add Student
 def add():
   name = request.args.get('name')
@@ -30,6 +31,7 @@ def add():
 
     return '{"Result":"Success"}' # Really? maybe we should check!
   
+# READ
 @app.route("/") #Default - Show Data
 def read(): # Name of the method
   cur = mysql.connection.cursor() #create a connection to the SQL instance
@@ -49,6 +51,44 @@ def read(): # Name of the method
     mimetype='application/json'
   )
   return ret #Return the data in a string format
+
+# UPDATE
+@app.route("/update")
+def update():
+  cur = mysql.connection.cursor()
+  student_id = request.args.get('id')
+  cur.execute(f'SELECT * FROM students WHERE studentID = {student_id}')
+  rv = cur.fetchall()
+  if rv:
+    name = request.args.get('name')
+    email = request.args.get('email')
+
+    if name == None or email == None: 
+      return 'Please specify a name and email ...'
+    else: 
+      cur.execute(f'UPDATE students SET studentName = \'{name}\', email = \'{email}\' WHERE studentID = {student_id}')
+      mysql.connection.commit()
+
+      return "Updated Successfully"
+  
+  else:
+    return 'Student not found.'
+
+# DELETE 
+@app.route("/delete")
+def delete():
+  cur = mysql.connection.cursor()
+  student_id = request.args.get('id')
+  cur.execute(f'SELECT * FROM students WHERE studentID = {student_id}')
+  rv = cur.fetchall()
+  if rv:
+      cur.execute(f'DELETE FROM students WHERE studentID = {student_id}')
+      mysql.connection.commit()
+      return "Deleted Successfully"
+  
+  else:
+    return 'Student not found.'
+
 if __name__ == "__main__":
   app.run(host='0.0.0.0',port='8080') #Run the flask app at port 8080
 
